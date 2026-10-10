@@ -1,4 +1,5 @@
 import express from "express";
+import { fileURLToPath } from "node:url";
 import { saveMap, getMap, recordHit, getStats } from "./db.js";
 import { generateMap } from "./generate.js";
 import { buildPdf } from "./pdf.js";
@@ -6,6 +7,7 @@ import { LlmDisabledError, LlmFailedError } from "./llm.js";
 
 const app = express();
 app.use(express.json());
+app.use(express.static(fileURLToPath(new URL("../public", import.meta.url))));
 
 const inflight = new Map();
 

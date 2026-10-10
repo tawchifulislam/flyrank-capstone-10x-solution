@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TopicMap</title>
+<style>
+:root { color-scheme: light dark; }
+body { margin: 0; font-family: system-ui, sans-serif; min-height: 100vh; display: grid; place-items: center; }
+main { width: min(560px, 100% - 32px); padding: 24px 0; }
+h1 { margin: 0 0 8px; font-size: 2rem; }
+.lead { margin: 0 0 24px; opacity: 0.75; }
+form { display: flex; gap: 8px; }
+input { flex: 1; min-width: 0; padding: 12px 14px; font-size: 1rem; border: 1px solid #8886; border-radius: 8px; background: transparent; color: inherit; }
+button { padding: 12px 18px; font-size: 1rem; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; }
+button:disabled { opacity: 0.6; cursor: wait; }
+#status { min-height: 1.5em; margin: 16px 0 8px; }
+#status.error { color: #dc2626; }
+</style>
+</head>
+<body>
+<main>
+<h1>TopicMap</h1>
+<p class="lead">Type a programming topic. Get a beginner learning map as a PDF.</p>
+<form id="form">
+<input id="topic" type="text" maxlength="100" placeholder="For example: JavaScript closures" autocomplete="off" autofocus required>
+<button id="go" type="submit">Get PDF</button>
+</form>
+<p id="status" role="status"></p>
+<a id="again" href="#" hidden>Download the PDF again</a>
+</main>
+<script>
+const form = document.getElementById("form");
+const input = document.getElementById("topic");
+const button = document.getElementById("go");
+const status = document.getElementById("status");
+const again = document.getElementById("again");
+
+let timer = null;
+
+function setStatus(text, isError) {
+  status.textContent = text;
+  status.className = isError ? "error" : "";
+}
+
+function startTimer() {
+  const started = Date.now();
+  timer = setInterval(() => {
+    const seconds = Math.round((Date.now() - started) / 1000);
+    setStatus(`Generating your map... ${seconds}s (a new topic takes 20 to 45 seconds)`);
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timer);
+  timer = null;
+}
+
+function downloadPdf(slug) {
+  const link = document.createElement("a");
+  link.href = `/topics/${slug}/pdf`;
+  link.download = `${slug}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  again.href = `/topics/${slug}/pdf`;
+  again.hidden = false;
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const topic = input.value.trim();
+  if (!topic) return;
+  button.disabled = true;
+  again.hidden = true;
+  setStatus("Checking saved maps...");
+  startTimer();
+  try {
+    const response = await fetch("/breakdown", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic }),
+    });
+    const data = await response.json();
+    stopTimer();
+    if (!response.ok) {
+      setStatus(data.error || "Something went wrong", true);
+      return;
+    }
+    const cached = response.headers.get("X-Cache") === "HIT";
+    setStatus(cached ? "Found a saved map. Your PDF is downloading." : "Done. Your PDF is downloading.");
+    downloadPdf(data.slug);
+  } catch {
+    stopTimer();
+    setStatus("Could not reach the server", true);
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # TopicMap
 
-Type a programming topic, get a step-by-step learning map that a complete beginner can follow. Save it, reuse it instantly, and download it as a PDF roadmap.
+Type a programming topic, press Enter, get a step-by-step learning map that a complete beginner can follow, as a PDF. Maps are saved and reused instantly.
 
 ## The problem
 
@@ -13,8 +13,8 @@ Finding a clear, beginner-safe learning path for one topic takes about 1 hour of
 ## Concepts used
 
 | Concept | Where it lives in the code |
-|---|---|
-| API endpoints | `src/server.js`: POST /breakdown, GET /topics/:slug, GET /topics/:slug/pdf, GET /stats, with status codes 200, 201, 400, 404, 502, 503 |
+| --- | --- |
+| API endpoints | `src/server.js`: POST /breakdown, GET /topics/:slug, GET /topics/:slug/pdf, GET /stats, with status codes 200, 201, 400, 404, 502, 503. The one-page browser UI is `public/index.html` |
 | LLM integration | `src/llm.js`, `src/schema.js`, `src/generate.js`: one narrow job (topic to JSON map), Zod validation, up to 3 attempts, token and latency log in the `llm_calls` table, kill switch `LLM_ENABLED=false` |
 | Database | `src/db.js`: SQLite file through `node:sqlite`, tables `maps` and `llm_calls`, data survives restarts |
 | Caching | `src/server.js` and `src/db.js`: maps are stored by normalized topic slug and reused, hit counter, `X-Cache: HIT` or `MISS` header, in-flight deduplication so parallel requests for one new topic make a single LLM call |
@@ -25,26 +25,32 @@ No swaps. All 5 concepts come from the main list.
 ## Requirements
 
 - Node.js 24
-- A bash style shell with curl (Git Bash on Windows, any terminal on macOS or Linux)
+- A bash style shell with curl for the API examples (Git Bash on Windows, any terminal on macOS or Linux)
 
 ## Run it (2 commands)
 
     npm install
     npm run demo
 
-`npm run demo` loads 2 seeded maps into a local SQLite file and starts the server on http://localhost:3000. No API key is needed for the seeded topics.
+`npm run demo` loads 2 seeded maps into a local SQLite file and starts the server on <http://localhost:3000>. No API key is needed for the seeded topics.
+
+## Use it in the browser
+
+Open <http://localhost:3000>, type a topic, press Enter. The PDF downloads when it is ready.
+
+- Seeded topics (JavaScript closures, Python decorators) download at once.
+- A new topic needs a free API key (see below) and takes 20 to 45 seconds. The page shows a running timer.
+- Without a key, a new topic shows "generation is currently disabled" and saved topics still work.
 
 ## 5-minute demo path
 
-Keep the server running and open a second terminal.
+Keep the server running.
 
-1. Read a seeded map. Expect status 200 and `X-Cache: HIT`.
+1. Open <http://localhost:3000>, type `JavaScript closures`, press Enter. The page says it found a saved map and the PDF downloads.
+
+2. In a second terminal, read the same map through the API. Expect status 200 and `X-Cache: HIT`.
 
         curl -i localhost:3000/topics/javascript-closures
-
-2. Download the PDF roadmap and open it.
-
-        curl -o javascript-closures.pdf localhost:3000/topics/javascript-closures/pdf
 
 3. Ask for the same topic with different capitalization and spacing. Expect 200 and `X-Cache: HIT`, no new LLM call.
 
@@ -58,7 +64,7 @@ Keep the server running and open a second terminal.
 
         curl -i localhost:3000/topics/nothing-here
 
-6. Generate a brand new map with the LLM (needs a free API key, see below). Expect status 201 and `X-Cache: MISS` after 20 to 45 seconds. Run it again and expect 200 and `HIT`.
+6. Generate a brand new map with the LLM (needs a free API key, see below). In the browser type `SQL joins` and press Enter, or use the API. Expect status 201 and `X-Cache: MISS` after 20 to 45 seconds. Run it again and expect 200 and `HIT`.
 
         curl -i -X POST localhost:3000/breakdown -H "Content-Type: application/json" -d '{"topic":"SQL joins"}'
 
@@ -85,7 +91,7 @@ Groq also works: base URL `https://api.groq.com/openai/v1` and a model from its 
 ## Environment variables
 
 | Name | Meaning |
-|---|---|
+| --- | --- |
 | PORT | Server port, default 3000 |
 | DB_PATH | SQLite file path, default `topicmap.db` |
 | LLM_ENABLED | Set to `false` to switch generation off |
@@ -98,7 +104,7 @@ Secrets live only in `.env`, which is ignored by Git.
 ## API
 
 | Method and path | Result |
-|---|---|
+| --- | --- |
 | POST /breakdown with `{"topic": "..."}` | 201 new map, 200 cached map, 400 bad topic, 502 invalid LLM output after 3 attempts, 503 generation disabled |
 | GET /topics/:slug | 200 saved map, 404 unknown slug |
 | GET /topics/:slug/pdf | 200 PDF file, 404 unknown slug |
@@ -106,14 +112,15 @@ Secrets live only in `.env`, which is ignored by Git.
 
 ## Project structure
 
-    src/server.js    routes, cache logic, error mapping
-    src/llm.js       LLM call, retries, cost log, kill switch
-    src/schema.js    Zod schema of a learning map
-    src/generate.js  topic to map
-    src/db.js        SQLite access
-    src/pdf.js       PDF builder
-    src/seed.js      loads seed/maps.json
-    seed/maps.json   2 demo maps
+    public/index.html  one-page browser UI
+    src/server.js      routes, cache logic, error mapping
+    src/llm.js         LLM call, retries, cost log, kill switch
+    src/schema.js      Zod schema of a learning map
+    src/generate.js    topic to map
+    src/db.js          SQLite access
+    src/pdf.js         PDF builder
+    src/seed.js        loads seed/maps.json
+    seed/maps.json     2 demo maps
 
 ## Limits
 
@@ -127,4 +134,4 @@ No user accounts, no course or video content, no mobile app, no graph visuals. T
 
 ## Future ideas
 
-Login with learning progress ticks, a simple web page for the map, more export formats.
+Login with learning progress ticks, more export formats.

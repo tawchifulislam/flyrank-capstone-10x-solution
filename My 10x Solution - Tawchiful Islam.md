@@ -14,7 +14,7 @@ My 10x claim: finding a clear path for one topic takes about 1 hour of searching
 
 ## 2. How did I implement my solution?
 
-TopicMap is a small web API. You send it a topic name and it returns a learning map: what to know first, the core steps in learning order (each with one sentence on why it matters and an estimated time), a small first practice project, and the common beginner mistakes. The map can also be downloaded as a PDF.
+TopicMap is a small web service with a one-page website. You type a topic name, press Enter, and a PDF learning map downloads when it is ready. The map has what to know first, the core steps in learning order (each with one sentence on why it matters and an estimated time), a small first practice project, and the common beginner mistakes. The same thing is available through an API.
 
 What happens when you ask for a topic:
 
@@ -22,13 +22,13 @@ What happens when you ask for a topic:
 2. If the map is already saved, it is returned at once and no AI call is made.
 3. If not, the server asks an AI model to write the map as JSON in a fixed shape. The answer is checked against a schema. If the shape is wrong, the server retries, up to 3 attempts. Every attempt is logged with token counts and time.
 4. A valid map is saved and returned. If two people ask for the same new topic at the same moment, only one AI call is made.
-5. Any saved map can be downloaded as a PDF roadmap.
+5. The page downloads the saved map as a PDF roadmap.
 
 Concepts implemented (5 from the main list):
 
 | Concept | Where it lives |
 | --- | --- |
-| API endpoints | src/server.js: POST /breakdown, GET /topics/:slug, GET /topics/:slug/pdf, GET /stats, with correct status codes and validation |
+| API endpoints | src/server.js: POST /breakdown, GET /topics/:slug, GET /topics/:slug/pdf, GET /stats, with correct status codes and validation. The browser page is public/index.html |
 | LLM integration | src/llm.js, src/schema.js, src/generate.js: one narrow job, Zod validation, retries, cost log, kill switch |
 | Database | src/db.js: SQLite, data survives a restart |
 | Caching | src/server.js and src/db.js: saved maps are reused, hit counter, X-Cache header, one AI call for parallel identical requests |
@@ -41,6 +41,6 @@ How to run it (Node 24):
     npm install
     npm run demo
 
-This loads 2 seeded maps and starts the server on <http://localhost:3000>. The seeded topics work without any API key. Generating a new topic needs a free Gemini key in a local .env file. The README has a 5-minute demo path and the full steps.
+This loads 2 seeded maps and starts the server. Open <http://localhost:3000>, type a topic and press Enter. The seeded topics work without any API key. Generating a new topic needs a free Gemini key in a local .env file. The README has a 5-minute demo path and the full steps.
 
-What I decided not to build: user accounts, course or video content, a mobile app and graph visuals. Future ideas: login with learning progress ticks and a simple web page for the map.
+What I decided not to build: user accounts, course or video content, a mobile app and graph visuals. Future ideas: login with learning progress ticks and more export formats.
