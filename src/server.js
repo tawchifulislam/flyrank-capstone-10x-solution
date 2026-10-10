@@ -1,10 +1,12 @@
 import express from "express";
-import { saveMap, getMap } from "./db.js";
+import { saveMap, getMap, recordHit, getStats } from "./db.js";
 import { generateMap } from "./generate.js";
 import { LlmDisabledError, LlmFailedError } from "./llm.js";
 
 const app = express();
 app.use(express.json());
+
+const inflight = new Map();
 
 function slugify(text) {
   return text
@@ -23,12 +25,25 @@ app.post("/breakdown", async (req, res) => {
   if (!slug) {
     return res.status(400).json({ error: "topic must contain letters or numbers" });
   }
+
   const existing = getMap(slug);
-  if (existing) return res.status(200).json(existing);
+  if (existing) {
+    recordHit(slug);
+    res.set("X-Cache", "HIT");
+    return res.status(200).json({ ...existing, cached: true });
+  }
+
   try {
-    const map = await generateMap(topic, slug);
-    saveMap(slug, topic, map);
-    return res.status(201).json(getMap(slug));
+    let pending = inflight.get(slug);
+    if (!pending) {
+      pending = generateMap(topic, slug)
+        .then((map) => saveMap(slug, topic, map))
+        .finally(() => inflight.delete(slug));
+      inflight.set(slug, pending);
+    }
+    await pending;
+    res.set("X-Cache", "MISS");
+    return res.status(201).json({ ...getMap(slug), cached: false });
   } catch (err) {
     if (err instanceof LlmDisabledError) {
       return res.status(503).json({ error: "generation is currently disabled" });
@@ -43,8 +58,12 @@ app.post("/breakdown", async (req, res) => {
 app.get("/topics/:slug", (req, res) => {
   const found = getMap(req.params.slug);
   if (!found) return res.status(404).json({ error: "not found" });
-  return res.json(found);
+  recordHit(found.slug);
+  res.set("X-Cache", "HIT");
+  return res.json({ ...found, cached: true });
 });
+
+app.get("/stats", (req, res) => res.json(getStats()));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`listening on ${port}`));
