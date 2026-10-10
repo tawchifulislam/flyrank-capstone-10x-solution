@@ -1,51 +1,46 @@
 # My 10x Solution - Tawchiful Islam
 
-Working name: TopicMap
+Project: TopicMap
 
-## The problem
+Repository: <https://github.com/tawchifulislam/flyrank-capstone-10x-solution>
 
-Someone who wants to start a programming language topic, such as JavaScript closures, Python decorators or SQL joins, does not know where to begin. They open many tabs, read scattered tutorials, and still do not know what to learn first, what to skip, and what comes next. Beginners lose the first hour just deciding on a path, and many give up before they start.
+## 1. What problem am I solving?
 
-## Who has this problem
+Someone who wants to learn a programming topic, for example JavaScript closures, Python decorators or SQL joins, usually does not know where to start. They open many tabs, read scattered tutorials and watch videos in the wrong order. They cannot tell what to learn first, what they can skip and what comes next. The first hour goes into deciding on a path instead of learning, and many beginners give up before they begin.
 
-Complete beginners who are starting a new programming topic today, and self-taught learners who want a clear order of steps instead of random videos.
+This hits complete beginners and self-taught learners the most, because they do not yet know the shape of the topic they are about to learn.
 
-## The 10x claim
+My 10x claim: finding a clear path for one topic takes about 1 hour of searching (my own estimate). With TopicMap a new topic takes about 20 to 45 seconds (measured on a free Gemini key), and every repeat request is answered from the database with no new AI call.
 
-Finding a clear, beginner-safe learning path for one topic takes about 1 hour of searching today. With TopicMap it takes about 30 seconds: type the topic name, get a step-by-step breakdown map. The real before and after numbers will be measured and added later.
+## 2. How did I implement my solution?
 
-## What the user gets
+TopicMap is a small web API. You send it a topic name and it returns a learning map: what to know first, the core steps in learning order (each with one sentence on why it matters and an estimated time), a small first practice project, and the common beginner mistakes. The map can also be downloaded as a PDF.
 
-A fixed-structure breakdown for any topic you type:
+What happens when you ask for a topic:
 
-1. What you must know first
-2. Core ideas in learning order, each with one line on why it matters
-3. A first small practice project
-4. Common beginner mistakes
-5. Estimated time per step
+1. The server turns the topic into a clean slug (for example "JavaScript   Closures" becomes javascript-closures) and looks in the database.
+2. If the map is already saved, it is returned at once and no AI call is made.
+3. If not, the server asks an AI model to write the map as JSON in a fixed shape. The answer is checked against a schema. If the shape is wrong, the server retries, up to 3 attempts. Every attempt is logged with token counts and time.
+4. A valid map is saved and returned. If two people ask for the same new topic at the same moment, only one AI call is made.
+5. Any saved map can be downloaded as a PDF roadmap.
 
-## Concepts (5 from the program, 0 swaps)
+Concepts implemented (5 from the main list):
 
-| Concept | Where it lives in the solution |
+| Concept | Where it lives |
 | --- | --- |
-| API endpoints | POST /breakdown takes a topic, GET /topics/:slug returns a saved map |
-| LLM integration | One narrow job: turn a topic into a fixed JSON map, with schema validation, retries and a cost log |
-| Database | Every generated map is saved and survives a restart |
-| Caching | The same topic asked again is returned from the database with no new LLM call |
-| Reporting (PDF) | Any map can be downloaded as a PDF roadmap |
+| API endpoints | src/server.js: POST /breakdown, GET /topics/:slug, GET /topics/:slug/pdf, GET /stats, with correct status codes and validation |
+| LLM integration | src/llm.js, src/schema.js, src/generate.js: one narrow job, Zod validation, retries, cost log, kill switch |
+| Database | src/db.js: SQLite, data survives a restart |
+| Caching | src/server.js and src/db.js: saved maps are reused, hit counter, X-Cache header, one AI call for parallel identical requests |
+| Reporting (PDF) | src/pdf.js: PDF roadmap download |
 
-## Core feature list (5 features max)
+Swaps: none. All 5 concepts come from the main list, so no swap reasons are needed.
 
-1. Submit a topic and receive a structured breakdown map
-2. Validate the LLM output against a fixed schema
-3. Save and reuse maps by topic
-4. Cost and call log for every LLM request
-5. Download a map as PDF
+How to run it (Node 24):
 
-## Non-goal
+    npm install
+    npm run demo
 
-No user accounts, no course or video content, no mobile app, and no fancy graph visuals. The map is a clean tree of text.
+This loads 2 seeded maps and starts the server on <http://localhost:3000>. The seeded topics work without any API key. Generating a new topic needs a free Gemini key in a local .env file. The README has a 5-minute demo path and the full steps.
 
-## Future ideas
-
-Login with learning progress ticks, more output formats, a simple web page for the map.
+What I decided not to build: user accounts, course or video content, a mobile app and graph visuals. Future ideas: login with learning progress ticks and a simple web page for the map.
