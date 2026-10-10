@@ -4,4 +4,5 @@ node_modules/
 *.db-wal
 *.db-shm
 *.db-journal
+*.pdf
 output/

@@ -1,6 +1,7 @@
 import express from "express";
 import { saveMap, getMap, recordHit, getStats } from "./db.js";
 import { generateMap } from "./generate.js";
+import { buildPdf } from "./pdf.js";
 import { LlmDisabledError, LlmFailedError } from "./llm.js";
 
 const app = express();
@@ -61,6 +62,16 @@ app.get("/topics/:slug", (req, res) => {
   recordHit(found.slug);
   res.set("X-Cache", "HIT");
   return res.json({ ...found, cached: true });
+});
+
+app.get("/topics/:slug/pdf", (req, res) => {
+  const found = getMap(req.params.slug);
+  if (!found) return res.status(404).json({ error: "not found" });
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="${found.slug}.pdf"`,
+  });
+  return buildPdf(found, res);
 });
 
 app.get("/stats", (req, res) => res.json(getStats()));
