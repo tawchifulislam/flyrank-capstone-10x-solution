@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --env-file-if-exists=.env src/server.js"
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "seed": "node --env-file-if-exists=.env src/seed.js",
+    "demo": "node --env-file-if-exists=.env src/seed.js && node --env-file-if-exists=.env src/server.js"
   },
   "repository": {
     "type": "git",
@@ -24,5 +26,8 @@
     "openai": "^7.32.0",
     "pdfkit": "^0.20.2",
     "zod": "^4.6.5"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

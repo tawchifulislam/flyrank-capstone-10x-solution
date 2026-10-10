@@ -1,0 +1,121 @@
+[
+  {
+    "slug": "javascript-closures",
+    "topic": "JavaScript closures",
+    "map": {
+      "prerequisites": [
+        "How to create variables using let and const",
+        "How to write basic functions and call them",
+        "How to return values from a function"
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "title": "Understand variable scope",
+          "why": "Scope is the rule that decides where a variable can be seen and used in your code.",
+          "minutes": 15
+        },
+        {
+          "order": 2,
+          "title": "Nest one function inside another",
+          "why": "Closures rely on inner functions having access to the variables of their parent functions.",
+          "minutes": 15
+        },
+        {
+          "order": 3,
+          "title": "Return an inner function",
+          "why": "Returning an inner function allows it to be called outside its original birthplace.",
+          "minutes": 20
+        },
+        {
+          "order": 4,
+          "title": "Inspect how the function remembers data",
+          "why": "A closure happens when that returned function remembers and accesses outer variables even after the outer function finishes running.",
+          "minutes": 25
+        },
+        {
+          "order": 5,
+          "title": "Protect variables using private state",
+          "why": "Closures let you hide data so outside code cannot accidentally change it.",
+          "minutes": 20
+        }
+      ],
+      "first_project": "Build a score tracker function that holds a hidden score and returns small functions to add points, remove points, and check the current score without letting outside code edit the score directly.",
+      "common_mistakes": [
+        "Thinking a closure copies the variable's value instead of holding a live link to the actual variable.",
+        "Calling the inner function immediately with parentheses instead of returning the function itself.",
+        "Using the old var keyword in loops, which shares one variable across all closures instead of giving each loop run its own variable.",
+        "Creating unnecessary closures inside loops or repeated actions that use up computer memory."
+      ]
+    }
+  },
+  {
+    "slug": "python-decorators",
+    "topic": "Python decorators",
+    "map": {
+      "prerequisites": [
+        "Basic Python syntax such as variables and print statements",
+        "How to define and call functions using def",
+        "How function return values work"
+      ],
+      "steps": [
+        {
+          "order": 1,
+          "title": "Treating functions as ordinary values",
+          "why": "Decorators rely on passing functions into other functions just like numbers or text.",
+          "minutes": 15
+        },
+        {
+          "order": 2,
+          "title": "Writing functions inside other functions",
+          "why": "A decorator uses an inner helper function, called a nested function, to wrap around your code.",
+          "minutes": 20
+        },
+        {
+          "order": 3,
+          "title": "Returning a function from a function",
+          "why": "A decorator works by building a new function and handing it back to you.",
+          "minutes": 20
+        },
+        {
+          "order": 4,
+          "title": "Understanding closures",
+          "why": "A closure lets an inner function remember values from the outer function even after the outer one finishes running.",
+          "minutes": 25
+        },
+        {
+          "order": 5,
+          "title": "Building a manual decorator",
+          "why": "Writing the wrapper by hand shows you that a decorator is just a function that changes another function.",
+          "minutes": 30
+        },
+        {
+          "order": 6,
+          "title": "Using the at-symbol shortcut",
+          "why": "The @ symbol is syntax sugar, meaning a shorter and cleaner way to apply your decorator.",
+          "minutes": 15
+        },
+        {
+          "order": 7,
+          "title": "Supporting arguments with args and kwargs",
+          "why": "Using *args and **kwargs allows your decorator to work on functions that take any number of inputs.",
+          "minutes": 30
+        },
+        {
+          "order": 8,
+          "title": "Preserving function identity with functools.wraps",
+          "why": "Without this tool, your decorated function forgets its original name and help text.",
+          "minutes": 15
+        }
+      ],
+      "first_project": "Build an execution timer decorator that records the start time, runs any decorated function, records the end time, and prints how many seconds the function took to finish.",
+      "common_mistakes": [
+        "Forgetting to return the inner wrapper function at the end of the decorator.",
+        "Forgetting to return the result of the original function inside the wrapper, which makes the decorated function return None.",
+        "Calling the function with parentheses when decorating, instead of passing just the function name.",
+        "Writing a wrapper that takes no parameters, which breaks as soon as the decorated function needs arguments.",
+        "Not using functools.wraps, causing function.__name__ to always display 'wrapper'."
+      ]
+    }
+  }
+]
